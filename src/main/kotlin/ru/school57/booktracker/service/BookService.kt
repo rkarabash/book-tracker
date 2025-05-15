@@ -1,51 +1,90 @@
 package ru.school57.booktracker.service
 
+import jakarta.persistence.EntityNotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Pageable
+import org.springframework.stereotype.Service
 import ru.school57.booktracker.dto.BookDto
+import ru.school57.booktracker.dto.UpsertBookDto
+import ru.school57.booktracker.dto.toDto
+import ru.school57.booktracker.entity.toEntity
 import ru.school57.booktracker.repository.BookRepository
 
-// TODO: добавить аннотацию @Service
+@Service
 class BookService(
     private val bookRepository: BookRepository
 ) {
-    fun create(bookDto: BookDto): BookDto {
-        // TODO: залогировать входящие параметры (DEBUG-уровень)
-        // TODO: сохранить книгу в базу через bookRepository
-        // TODO: залогировать факт создания (INFO-уровень), включая ID
-        // TODO: вернуть созданную книгу как BookDto
+    private val log = LoggerFactory.getLogger(this::class.java)
+
+    fun create(bookDto: UpsertBookDto): BookDto {
+        log.debug("Creating a new book with data: $bookDto")
+
+        val book = bookDto.toEntity()
+        val savedBook = bookRepository.save(book)
+
+        log.info("Created new book with ID: ${savedBook.id}")
+        return savedBook.toDto()
     }
 
     fun getById(id: Long): BookDto {
-        // TODO: залогировать входящий id (DEBUG)
-        // TODO: попытаться получить книгу по id через bookRepository
-        // TODO: если книга не найдена — выбросить EntityNotFoundException с понятным сообщением
-        // TODO: залогировать успешное получение (INFO)
-        // TODO: вернуть найденную книгу как BookDto
+        log.debug("Fetching book with ID: $id")
+
+        val book = bookRepository.findById(id)
+            .orElseThrow {
+                EntityNotFoundException("Book with ID $id not found").also {
+                    log.error("Book with ID $id not found")
+                }
+            }
+
+        log.info("Successfully fetched book with ID: $id")
+        return book.toDto()
     }
 
-    fun update(id: Long, dto: BookDto): BookDto {
-        // TODO: залогировать входящие параметры (DEBUG): id и dto
-        // TODO: найти книгу по id
-        // TODO: если не найдена — выбросить EntityNotFoundException
-        // TODO: обновить поля книги на основе dto
-        // TODO: сохранить обновлённую книгу
-        // TODO: залогировать обновление (INFO), включая id
-        // TODO: вернуть обновлённую книгу как BookDto
+    fun update(id: Long, dto: UpsertBookDto): BookDto {
+        log.debug("Updating book with ID: $id, new data: $dto")
+
+        val existingBook = bookRepository.findById(id)
+            .orElseThrow {
+                EntityNotFoundException("Book with ID $id not found").also {
+                    log.error("Book with ID $id not found")
+                }
+            }
+
+        val updatedBook = existingBook.copy(
+            title = dto.title,
+            author = dto.author,
+            year = dto.year,
+            read = dto.read
+        )
+
+        val savedBook = bookRepository.save(updatedBook)
+        log.info("Updated book with ID: $id")
+
+        return savedBook.toDto()
     }
 
     fun delete(id: Long) {
-        // TODO: залогировать входящий id (DEBUG)
-        // TODO: проверить наличие книги через existsById
-        // TODO: если не найдена — выбросить EntityNotFoundException
-        // TODO: удалить книгу
-        // TODO: залогировать удаление (INFO), включая id
-        // TODO: метод ничего не возвращает
+        log.debug("Deleting book with ID: $id")
+
+        if (!bookRepository.existsById(id)) {
+            throw EntityNotFoundException("Book with ID $id not found").also {
+                log.error("Book with ID $id not found")
+            }
+        }
+
+        bookRepository.deleteById(id)
+        log.info("Deleted book with ID: $id")
     }
 
-    fun list(read: Boolean?): List<BookDto> {
-        // TODO: залогировать параметр read (DEBUG)
-        // TODO: если read == null — вернуть все книги
-        // TODO: если read != null — вернуть отфильтрованные книги
-        // TODO: залогировать количество возвращённых записей (INFO)
-        // TODO: вернуть список книг как List<BookDto>
+    fun list(read: Boolean?, pagination: Pageable): List<BookDto> {
+        log.debug("Fetching books with read status: $read")
+
+        val books = when (read) {
+            null -> bookRepository.findAll(pagination)
+            else -> bookRepository.findAllByRead(read, pagination)
+        }
+
+        log.info("Fetched ${pagination.pageSize} books")
+        return books.map { it.toDto() }
     }
 }
