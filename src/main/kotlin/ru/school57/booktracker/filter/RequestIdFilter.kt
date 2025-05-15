@@ -3,9 +3,12 @@ package ru.school57.booktracker.filter
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.slf4j.MDC
+import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
+import java.util.UUID
 
-// TODO: добавить аннотацию @Component, чтобы фильтр был зарегистрирован в контексте Spring
+@Component
 class RequestIdFilter : OncePerRequestFilter() {
 
     override fun doFilterInternal(
@@ -13,10 +16,13 @@ class RequestIdFilter : OncePerRequestFilter() {
         response: HttpServletResponse,
         filterChain: FilterChain
     ) {
-        // TODO: сгенерировать уникальный requestId (можно через UUID)
-        // TODO: положить его в MDC (контекст логов)
-        // TODO: выполнить цепочку фильтров
-        // TODO: очистить MDC в блоке finally
-        TODO("")
+        val requestId = UUID.randomUUID().toString()
+        MDC.put("requestId", requestId)
+
+        try {
+            filterChain.doFilter(request, response)
+        } finally {
+            MDC.remove("requestId")
+        }
     }
 }

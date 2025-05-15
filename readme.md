@@ -11,5 +11,11 @@
 ## 📈 DDL — SQL-схема таблицы `book`
 
 ```sql
-<!-- TODO: вставьте здесь DDL скрипт на создание таблицы book -->
+CREATE TABLE book (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR NOT NULL,
+    author VARCHAR NOT NULL,
+    year INT NOT NULL,
+    read BOOLEAN NOT NULL
+);
 ```

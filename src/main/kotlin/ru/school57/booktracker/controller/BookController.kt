@@ -1,50 +1,38 @@
 package ru.school57.booktracker.controller
 
+import org.springframework.web.bind.annotation.*
 import ru.school57.booktracker.dto.BookDto
 import ru.school57.booktracker.service.BookService
 
-// TODO: добавить @RestController
-// TODO: добавить @RequestMapping("/books")
+@RestController
+@RequestMapping("/books")
 class BookController(private val bookService: BookService) {
 
-    // TODO: добавить аннотацию @PostMapping
-    // TODO: добавить @RequestBody к параметру dto
-    fun create(dto: BookDto): BookDto {
-        // TODO: вызвать bookService.create(dto)
-        // TODO: вернуть результат с HTTP 200
-        TODO("")
+    @PostMapping
+    fun create(@RequestBody dto: BookDto): BookDto {
+        return bookService.create(dto)
     }
 
-    // TODO: добавить аннотацию @GetMapping("/{id}")
-    // TODO: добавить @PathVariable к параметру id
-    fun get(id: Long): BookDto {
-        // TODO: вызвать bookService.getById(id)
-        // TODO: вернуть результат с HTTP 200
-        TODO("")
+    @GetMapping("/{id}")
+    fun get(@PathVariable id: Long): BookDto {
+        return bookService.getById(id)
     }
 
-    // TODO: добавить аннотацию @PutMapping("/{id}")
-    // TODO: добавить @PathVariable и @RequestBody к параметрам
-    fun update(id: Long, dto: BookDto): BookDto {
-        // TODO: вызвать bookService.update(id, dto)
-        // TODO: вернуть результат с HTTP 200
-        TODO("")
+    @PutMapping("/{id}")
+    fun update(
+        @PathVariable id: Long,
+        @RequestBody dto: BookDto
+    ): BookDto {
+        return bookService.update(id, dto)
     }
 
-    // TODO: добавить аннотацию @DeleteMapping("/{id}")
-    // TODO: добавить @PathVariable к параметру id
-    fun delete(id: Long): Unit {
-        // TODO: вызвать bookService.delete(id)
-        // TODO: вернуть HTTP 200 без тела
-        TODO("")
+    @DeleteMapping("/{id}")
+    fun delete(@PathVariable id: Long) {
+        bookService.delete(id)
     }
 
-    // TODO: добавить аннотацию @GetMapping
-    // TODO: добавить @RequestParam(read) к параметру
-    fun list(read: Boolean?): List<BookDto> {
-        // TODO: вызвать bookService.list(read)
-        // TODO: вернуть список книг с HTTP 200
-        TODO("")
+    @GetMapping
+    fun list(@RequestParam read: Boolean?): List<BookDto> {
+        return bookService.list(read)
     }
 }
-

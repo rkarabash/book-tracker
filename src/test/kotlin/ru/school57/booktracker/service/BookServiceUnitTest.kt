@@ -1,71 +1,117 @@
 package ru.school57.booktracker.service
 
+import io.kotest.matchers.shouldBe
+import io.mockk.every
+import io.mockk.verify
 import io.mockk.junit5.MockKExtension
 import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.InjectMockKs
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
+import ru.school57.booktracker.dto.BookDto
+import ru.school57.booktracker.entity.Book
 import ru.school57.booktracker.repository.BookRepository
-
-// TODO: юнит-тест для BookService
-// TODO: мокируем только BookRepository, без запуска Spring
-// Пример: https://github.com/Monax111/school57kotlin2/blob/1766125ad22d5e2b45af3f9e8e55244a552986d2/lesson13/src/test/kotlin/school57kotlin2/demo/service/UserServiceTest.kt
+import jakarta.persistence.EntityNotFoundException
 
 @ExtendWith(MockKExtension::class)
 class BookServiceUnitTest {
 
-    // TODO: замоканный репозиторий
     @MockK
     lateinit var bookRepository: BookRepository
 
-    // TODO: BookService с внедрённым моком
     @InjectMockKs
     lateinit var bookService: BookService
 
-    @BeforeEach
-    fun setUp() {
-        // TODO: инициализировать моки (если необходимо вручную)
+    @Test
+    fun `testCreateBook should save book to repository`() {
+        val bookDto = BookDto("Test Book", "Author", 2023, false)
+        val savedBook = Book(1, "Test Book", "Author", 2023, false)
+
+        every { bookRepository.save(any()) } returns savedBook
+
+        val result = bookService.create(bookDto)
+
+        result.title shouldBe "Test Book"
+        verify { bookRepository.save(any()) }
     }
 
-    // TODO: протестировать создание книги
-    // Проверьте, что bookRepository.save(...) вызывается
     @Test
-    fun testCreateBook() {
-        TODO("реализовать тест создания")
+    fun `testGetById should return book when exists`() {
+        val book = Book(1, "Test Book", "Author", 2023, false)
+
+        every { bookRepository.findById(1) } returns book
+
+        val result = bookService.getById(1)
+
+        result.title shouldBe "Test Book"
+        verify { bookRepository.findById(1) }
     }
 
-    // TODO: протестировать получение книги по ID
-    // Проверьте, что возвращается DTO при наличии книги
     @Test
-    fun testGetById() {
-        TODO("реализовать тест получения по id")
+    fun `testUpdateBook should update existing book`() {
+        val existingBook = Book(1, "Old Title", "Author", 2020, false)
+        val updatedBook = Book(1, "New Title", "Author", 2020, true)
+        val bookDto = BookDto("New Title", "Author", 2020, true)
+
+        every { bookRepository.findById(1) } returns existingBook
+        every { bookRepository.save(any()) } returns updatedBook
+
+        val result = bookService.update(1, bookDto)
+
+        result.title shouldBe "New Title"
+        result.read shouldBe true
+        verify {
+            bookRepository.findById(1)
+            bookRepository.save(any())
+        }
     }
 
-    // TODO: протестировать обновление книги
-    // Проверьте, что книга обновляется и сохраняется
     @Test
-    fun testUpdateBook() {
-        TODO("реализовать тест обновления")
+    fun `testDeleteBook should delete when book exists`() {
+        every { bookRepository.existsById(1) } returns true
+        every { bookRepository.deleteById(1) } returns Unit
+
+        bookService.delete(1)
+
+        verify {
+            bookRepository.existsById(1)
+            bookRepository.deleteById(1)
+        }
     }
 
-    // TODO: протестировать удаление книги
-    // Проверьте, что вызывается deleteById, и выбрасывается исключение, если книга не найдена
     @Test
-    fun testDeleteBook() {
-        TODO("реализовать тест удаления")
+    fun `testListBooks should filter by read status`() {
+        val readBooks = listOf(Book(1, "Book 1", "Author", 2023, true))
+
+        every { bookRepository.findByRead(true) } returns readBooks
+
+        val result = bookService.list(true)
+
+        result.size shouldBe 1
+        result[0].read shouldBe true
+        verify { bookRepository.findByRead(true) }
     }
 
-    // TODO: протестировать фильтрацию по read
-    // Проверьте вызов findAll() или findByRead(true/false)
     @Test
-    fun testListBooks() {
-        TODO("реализовать тест списка книг")
+    fun `testGetNotFound should throw exception when book not exists`() {
+        every { bookRepository.findById(99) } returns null
+
+        assertThrows<EntityNotFoundException> {
+            bookService.getById(99)
+        }
+
+        verify { bookRepository.findById(99) }
     }
 
-    // TODO: протестировать выброс EntityNotFoundException при отсутствии книги
     @Test
-    fun testGetNotFound() {
-        TODO("реализовать поведение при отсутствии книги")
+    fun `testDeleteBook should throw exception when book not exists`() {
+        every { bookRepository.existsById(99) } returns false
+
+        assertThrows<EntityNotFoundException> {
+            bookService.delete(99)
+        }
+
+        verify(exactly = 0) { bookRepository.deleteById(any()) }
     }
 }
