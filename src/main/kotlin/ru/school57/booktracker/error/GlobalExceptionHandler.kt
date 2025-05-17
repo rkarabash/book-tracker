@@ -3,44 +3,44 @@ package ru.school57.booktracker.error
 import jakarta.persistence.EntityNotFoundException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
+import org.springframework.web.bind.annotation.RestControllerAdvice
 import ru.school57.booktracker.dto.ErrorDto
 
-// TODO: добавить аннотацию @RestControllerAdvice
+
+@RestControllerAdvice
 class GlobalExceptionHandler {
 
-    // TODO: создать logger через LoggerFactory
     private val logger: Logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
-    // TODO: обработать EntityNotFoundException
-    // TODO: логировать на уровне WARN
-    // TODO: вернуть ResponseEntity с ErrorDto и статусом 404
     @ExceptionHandler(EntityNotFoundException::class)
     fun handleNotFound(ex: EntityNotFoundException): ResponseEntity<ErrorDto> {
-        // TODO: logger.warn(...)
-        // TODO: вернуть ErrorDto(code = "NOT_FOUND", message = ...)
-        TODO("")
+        logger.warn("Entity not found: ${ex.message}")
+
+        val error = ErrorDto(code = "NOT_FOUND", message = ex.message ?: "Entity not found")
+        return ResponseEntity(error, HttpStatus.NOT_FOUND)
     }
 
-    // TODO: обработать ошибки валидации
-    // TODO: логировать на уровне WARN
-    // TODO: вернуть ResponseEntity с ErrorDto и статусом 400
     @ExceptionHandler(MethodArgumentNotValidException::class)
     fun handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ErrorDto> {
-        // TODO: logger.warn(...)
-        // TODO: извлечь первое сообщение об ошибке и вернуть ErrorDto(code = "VALIDATION_FAILED", ...)
-        TODO("")
+
+        logger.warn("Validation failed: ${ex.message}")
+
+        val message = ex.bindingResult.fieldErrors.firstOrNull()?.defaultMessage ?: "Validation error"
+        val error = ErrorDto(code = "VALIDATION_FAILED", message = message)
+        return ResponseEntity(error, HttpStatus.BAD_REQUEST)
     }
 
-    // TODO: обработать все остальные исключения
-    // TODO: логировать на уровне ERROR с трейсом
-    // TODO: вернуть ResponseEntity с ErrorDto и статусом 500
+
     @ExceptionHandler(Exception::class)
     fun handleUnexpected(ex: Exception): ResponseEntity<ErrorDto> {
-        // TODO: logger.error(...)
-        // TODO: вернуть ErrorDto(code = "INTERNAL_ERROR", message = ...)
-        TODO("")
+
+        logger.error("Unexpected error occurred", ex)
+
+        val error = ErrorDto(code = "INTERNAL_ERROR", message = "An unexpected error occurred")
+        return ResponseEntity(error, HttpStatus.INTERNAL_SERVER_ERROR)
     }
 }

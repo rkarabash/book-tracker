@@ -1,16 +1,21 @@
 package ru.school57.booktracker.service
 
 import com.ninjasquad.springmockk.MockkBean
-import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.just
+import io.mockk.runs
+import io.mockk.verify
+import jakarta.persistence.EntityNotFoundException
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import ru.school57.booktracker.dto.BookDto
+import ru.school57.booktracker.entity.Book
 import ru.school57.booktracker.repository.BookRepository
-
-// TODO: тестирует BookService в изоляции от базы
-// TODO: использует замоканный BookRepository
-// Пример: https://github.com/Monax111/school57kotlin2/blob/1766125ad22d5e2b45af3f9e8e55244a552986d2/lesson13/src/test/kotlin/school57kotlin2/demo/ServiceTest.kt
+import java.util.*
 
 @SpringBootTest
 class BookServiceIntegrationTest {
@@ -21,44 +26,89 @@ class BookServiceIntegrationTest {
     @Autowired
     lateinit var bookService: BookService
 
+    private val sampleBook = Book(id = 1, title = "Title", author = "Author", year = 2023, read = false)
+    private val sampleBookDto = BookDto.fromEntity(sampleBook)
+
     @BeforeEach
     fun setUp() {
-        MockKAnnotations.init(this)
+        // SpringMockK сам инициализирует моки, можно не делать ничего
     }
 
-    // TODO: проверить, что книга сохраняется через репозиторий
     @Test
     fun testCreateBook() {
-        TODO("реализовать тест создания книги")
+        every { bookRepository.save(any<Book>()) } returns sampleBook
+
+        val created = bookService.create(sampleBookDto)
+
+        verify(exactly = 1) { bookRepository.save(any<Book>()) }
+
+        assertEquals(sampleBook.title, created.title)
     }
 
-    // TODO: проверить получение книги по ID
     @Test
     fun testGetBookById() {
-        TODO("реализовать тест получения по id")
+        every { bookRepository.findById(1) } returns Optional.of(sampleBook)
+
+        val found = bookService.getById(1)
+
+        verify(exactly = 1) { bookRepository.findById(1) }
+
+        assertEquals(sampleBook.author, found.author)
     }
 
-    // TODO: проверить обновление книги
     @Test
     fun testUpdateBook() {
-        TODO("реализовать тест обновления книги")
+        val updatedDto = BookDto(title = "Updated", author = "Author", year = 2024, read = true)
+        val updatedBook = sampleBook.copy(
+            title = updatedDto.title,
+            author = updatedDto.author,
+            year = updatedDto.year,
+            read = updatedDto.read
+        )
+
+        every { bookRepository.findById(1) } returns Optional.of(sampleBook)
+        every { bookRepository.save(any<Book>()) } returns updatedBook
+
+        val result = bookService.update(1, updatedDto)
+
+        verify(exactly = 1) { bookRepository.findById(1) }
+        verify(exactly = 1) { bookRepository.save(any<Book>()) }
+        assertEquals(updatedDto.title, result.title)
+        assertEquals(updatedDto.read, result.read)
     }
 
-    // TODO: проверить удаление книги
     @Test
     fun testDeleteBook() {
-        TODO("реализовать тест удаления книги")
+        every { bookRepository.existsById(1) } returns true
+        every { bookRepository.deleteById(1) } just runs
+
+        bookService.delete(1)
+
+        verify(exactly = 1) { bookRepository.existsById(1) }
+        verify(exactly = 1) { bookRepository.deleteById(1) }
     }
 
-    // TODO: проверить фильтрацию по флагу read
     @Test
     fun testFilterByRead() {
-        TODO("реализовать тест фильтрации")
+        val readBooks = listOf(sampleBook)
+        every { bookRepository.findByRead(true) } returns readBooks
+
+        val result = bookService.list(true)
+
+        verify(exactly = 1) { bookRepository.findByRead(true) }
+        assertEquals(1, result.size)
+        assertEquals(sampleBook.title, result[0].title)
     }
 
-    // TODO: проверить исключение при отсутствии книги
     @Test
     fun testGetNonExistentBookThrows() {
-        TODO("реализовать тест выброса EntityNotFoundException")
+        every { bookRepository.findById(999) } returns Optional.empty()
+
+        val exception = assertThrows(EntityNotFoundException::class.java) {
+            bookService.getById(999)
+        }
+
+        verify(exactly = 1) { bookRepository.findById(999) }
+        assertEquals("Book with ID 999 not found", exception.message)
     }
 }

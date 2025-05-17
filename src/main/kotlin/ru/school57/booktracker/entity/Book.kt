@@ -1,21 +1,30 @@
 package ru.school57.booktracker.entity
 
-// TODO: добавить аннотацию @Entity
-// Этот класс представляет таблицу книг в базе данных
-class Book {
+import jakarta.annotation.Generated
+import jakarta.persistence.*
 
-    // TODO: добавить поле id (тип Long)
-    // Это первичный ключ. Нужно добавить аннотации @Id и @GeneratedValue
+@Entity
 
-    // TODO: добавить поле title (тип String)
-    // Это название книги. Обязательное поле, нужно указать ограничение @Column(nullable = false)
+data class Book (
 
-    // TODO: добавить поле author (тип String)
-    // Это имя автора. Также обязательно для заполнения
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    val id: Long = 0,
 
-    // TODO: добавить поле year (тип Int)
-    // Это год издания книги
 
-    // TODO: добавить поле read (тип Boolean)
-    // Показывает, прочитал ли пользователь книгу
-}
+    @Column(nullable = false)
+    val title: String,
+
+
+    @Column(nullable = false)
+    val author: String,
+
+
+    @Column(nullable = false)
+    val year: Int,
+
+
+    @Column(nullable = false)
+    val read: Boolean
+
+)

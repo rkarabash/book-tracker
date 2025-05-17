@@ -1,24 +1,14 @@
 -- 001-init.sql
 
--- TODO: создать таблицу book
--- Назначение таблицы — хранение информации о книгах пользователя
+CREATE TABLE book (
 
--- TODO: добавить поле id (тип: BIGSERIAL, PRIMARY KEY)
--- Уникальный идентификатор книги, создаётся автоматически
+  id BIGSERIAL PRIMARY KEY,
 
--- TODO: добавить поле title (тип: VARCHAR, NOT NULL)
--- Название книги. Обязательное поле
+  title VARCHAR NOT NULL,
 
--- TODO: добавить поле author (тип: VARCHAR, NOT NULL)
--- Имя автора книги. Обязательное поле
+  author VARCHAR NOT NULL,
 
--- TODO: добавить поле year (тип: INT, NOT NULL)
--- Год публикации книги
+  year INT NOT NULL,
 
--- TODO: добавить поле read (тип: BOOLEAN, NOT NULL)
--- Было ли произведение прочитано
-
--- Примерный порядок:
--- CREATE TABLE book (
---   ...
--- );
+  read BOOLEAN NOT NULL
+);
